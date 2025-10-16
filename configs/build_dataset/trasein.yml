@@ -1,0 +1,16 @@
+__new_key_policy__: pass
+
+__default__:
+  - ../detect.yml
+  - ../pseudo_tracker.yml
+  - ../video/trasein.yml
+
+__run__:
+  __name__: "trasein_patch/{video.video_id}"
+  __output_dir__: experiment_folder/build_dataset
+  __main__: src.experiments.build_dataset:main
+
+
+patch_size: 32
+frame_gap: 50
+frame_interval: 4

@@ -1,0 +1,6 @@
+detection:
+  detector: wavelet
+  wavelet:
+    k: 2.5
+    scale: 1
+    min_area: 7.5

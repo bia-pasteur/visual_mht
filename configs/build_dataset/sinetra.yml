@@ -1,0 +1,12 @@
+__default__:
+  - ./trasein.yml
+  - ../video/sinetra.yml
+
+__run__:
+  __name__: "sinetra_patch/{video.scenario}_{video.seed}"
+  __output_dir__: experiment_folder/build_dataset
+
+pseudo_tracker:
+  association_threshold: 3.0  # Increase a bit as it moves more on SINETRA (still restrictive)
+
+frame_gap: 20

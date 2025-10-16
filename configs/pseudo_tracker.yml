@@ -1,0 +1,4 @@
+pseudo_tracker:  # For generating pseudo-ground truth with very few identity switches
+  association_threshold: 1.5  # Let's be very restrictive
+  n_valid: 2  # Only keep tracks of length >= 2
+  n_gap: 0  # Don't try to close gaps (too dangerous)

@@ -1,0 +1,12 @@
+video:
+  video_id: contrxn-1  # contrxn-[1, 2, 3] / nocontrxn-[1, 2, 3]
+  path: $TRASE_IN/tdt_{video.video_id}.avi
+
+  config:
+    aggregate: True
+    normalize: True
+    selected_channel: Null
+    q_min: 0.0  # Already normalized
+    q_max: 1.0
+    smooth_clip: 0.0
+    compute_stats_on: 50

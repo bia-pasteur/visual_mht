@@ -1,0 +1,13 @@
+video:
+  scenario: hydra_flow
+  seed: 111
+  path: $SINETRA/{video.scenario}/0.2-50.0/{video.seed}/video.tiff
+
+  config:
+    aggregate: True
+    normalize: True
+    selected_channel: Null
+    q_min: 0.0  # Already normalized
+    q_max: 1.0
+    smooth_clip: 0.0
+    compute_stats_on: 50

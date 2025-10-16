@@ -1,0 +1,8 @@
+optflow:
+  name: farneback
+  downscale: 4
+  farneback:
+    window_size: 20
+  tvl1:
+    attachment: 5.0
+    num_warp: 2
