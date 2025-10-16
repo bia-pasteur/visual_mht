@@ -1,0 +1,16 @@
+black
+byotrack
+dacite
+expyrun
+ipywidgets
+gurobipy
+matplotlib
+mypy
+notebook
+pylint
+scikit-image
+scipy
+sinetra
+torch-kf
+# trackeval => Has to dl the github
+types-tqdm
