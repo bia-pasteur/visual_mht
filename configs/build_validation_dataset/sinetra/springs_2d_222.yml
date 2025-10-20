@@ -1,0 +1,6 @@
+__default__:
+  - ./springs_2d_111.yml
+
+video:
+  seed: 222
+ 

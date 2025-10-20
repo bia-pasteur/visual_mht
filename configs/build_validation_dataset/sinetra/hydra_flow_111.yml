@@ -1,0 +1,25 @@
+__new_key_policy__: pass
+
+__default__:
+  - ../../video/sinetra.yml
+  - ../../detect.yml
+
+__run__:
+  __name__: sinetra_val_patch/{video.scenario}_{video.seed}
+  __output_dir__: experiment_folder/build_dataset
+  __main__: src.experiments.build_validation_dataset:main_sinetra
+
+
+roi_size: 1024
+patch_size: 32
+
+pairs:
+  - frames: [9, 12]
+    roi_loc: [0, 0]
+    annotator: sinetra
+  - frames: [151, 154]
+    roi_loc: [0, 0]
+    annotator: sinetra
+
+
+

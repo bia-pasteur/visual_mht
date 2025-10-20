@@ -1,0 +1,13 @@
+__default__:
+  - ./contrxn-1.yml
+
+video:
+  video_id: contrxn-2
+
+pairs:
+ - frames: [20, 25]
+   roi_loc: [250, 500]
+   annotator: Carla
+ - frames: [670, 675]
+   roi_loc: [500, 550]
+   annotator: Anja

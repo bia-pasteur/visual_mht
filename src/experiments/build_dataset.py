@@ -1,6 +1,7 @@
 """Extract ROI from detections
 
-It will extract the ROI for each detections (every frame_gap=K frames). In addition, for each extracted ROI at frame t, NN tracking is used to compensate motion and extract ROIs at frames [t - M, t + M].
+It will extract the ROI for each detections (every frame_gap=K frames). In addition, for each extracted ROI at frame t,
+NearestNeighbor tracking is extract matching ROIs at frames [t - M, t + M].
 
 To allow random augmentations in the training phase, ROIs are extracting with twice the size.
 """
@@ -81,7 +82,7 @@ def extract_at_frame_id(
 
             if patches_[t, i_patch_slice, j_patch_slice, 0].shape != (2 * patch_size + 1, 2 * patch_size + 1):
                 tqdm.tqdm.write(
-                    f"Partial patch at frame {frame_id + t} for detection {det_id} ({positions[t][det_id].numpy()})"
+                    f"Partial patch at frame {frame_id + t} for detection {det_id} ({positions[det_id, t].numpy()})"
                 )
 
             patches_[t, i_patch_slice, j_patch_slice] = frames[
@@ -115,7 +116,7 @@ def build_detection_mapping(tracks: Collection[byotrack.Track]) -> Dict[Tuple[in
         for frame_offset, detection_id in enumerate(track.detection_ids):
             if detection_id == -1:
                 continue
-            mapping[(detection_id, track.start + frame_offset)] = track.identifier
+            mapping[(int(detection_id), track.start + frame_offset)] = track.identifier
 
     return mapping
 
@@ -161,6 +162,7 @@ def main(name: str, cfg_data: dict) -> None:
         # (only available if a detection has been pseudo tracked)
         for det_id in range(detections.length):
             if (det_id, frame_id) not in det_to_track:  # Untracked
+
                 continue
 
             track = track_from_id[det_to_track[(det_id, frame_id)]]

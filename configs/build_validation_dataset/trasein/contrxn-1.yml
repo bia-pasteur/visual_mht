@@ -1,0 +1,30 @@
+__new_key_policy__: pass
+
+__default__:
+  - ../../video/trasein.yml
+  - ../../detect.yml
+
+__run__:
+  __name__: trasein_val_patch/{video.video_id}
+  __output_dir__: experiment_folder/build_dataset
+  __main__: src.experiments.build_validation_dataset:main_trasein
+
+
+roi_size: 200
+patch_size: 32
+
+pairs:
+ - frames: [150, 151]
+   roi_loc: [150, 300]
+   annotator: Anja
+ - frames: [501, 505]
+   roi_loc: [550, 450]
+   annotator: Anja
+#  - frames: [140, 142] # With motion blur
+#    roi_loc: [300, 550]
+#    annotator: Anja
+#  - frames: [141, 143] # With motion blur
+#    roi_loc: [170, 220]
+#    annotator: Anja
+
+

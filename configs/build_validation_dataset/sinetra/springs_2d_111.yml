@@ -1,0 +1,13 @@
+__default__:
+  - ./hydra_flow_111.yml
+
+video:
+  scenario: springs_2d
+
+pairs:
+  - frames: [5, 6]
+    roi_loc: [0, 0]
+    annotator: sinetra
+  - frames: [108, 112]
+    roi_loc: [0, 0]
+    annotator: sinetra

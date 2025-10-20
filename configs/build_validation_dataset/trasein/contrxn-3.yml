@@ -1,0 +1,13 @@
+__default__:
+  - ./contrxn-1.yml
+
+video:
+  video_id: contrxn-3
+
+pairs:
+ - frames: [155, 156]  # With motion blur
+   roi_loc: [350, 260]
+   annotator: Carla
+ - frames: [740, 745]
+   roi_loc: [400, 650]
+   annotator: Anja
