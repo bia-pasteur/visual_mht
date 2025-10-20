@@ -21,7 +21,7 @@ class _DatasetConfig:
     root: pathlib.Path
     val_root: pathlib.Path
     video_ids: List[str]
-    temporal_max_offset: int = 0
+    delta_t: int = 0
 
 
 @dataclasses.dataclass
@@ -30,12 +30,10 @@ class DatasetConfig(augmentations.AugmentationConfig, _DatasetConfig):
         return PatchDataset(self.root, self.video_ids, self.train_common() if train else self.test())
 
     def build_triplet_dataset(self) -> TripletPatchDataset:
-        return TripletPatchDataset(
-            self.build_patch_dataset(train=True), self.train_specific(), self.temporal_max_offset
-        )
+        return TripletPatchDataset(self.build_patch_dataset(train=True), self.train_specific(), self.delta_t)
 
     def build_siamese_dataset(self) -> SiameseDataset:
-        return SiameseDataset(self.build_patch_dataset(train=True), self.train_specific(), self.temporal_max_offset)
+        return SiameseDataset(self.build_patch_dataset(train=True), self.train_specific(), self.delta_t)
 
     def build_val_dataset(self) -> ValPatchDataset:
         return ValPatchDataset(self.val_root, self.test())

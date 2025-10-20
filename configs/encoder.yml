@@ -1,0 +1,7 @@
+model:
+  backbone: PreActResNet32
+  width: 1
+  in_planes: 1
+  out_planes: 50
+  head_layers: 1
+  drop_rate: 0.0

@@ -1,4 +1,4 @@
-"""Build a similar validation dataset for Sinetra"""
+"""Build a similar validation datasets"""
 
 import dataclasses
 import enum

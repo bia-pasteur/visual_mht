@@ -131,12 +131,13 @@ class EraseConfig:
 class BlurShotNoiseConfig:
     prob: float = 0.0
     sigma: Tuple[float, float] = (0.5, 1.0)
-    psnr: Tuple[float, float, float] = (1.0, 5.0, 20.0)
+    psnr: Tuple[float] = (20.0,)
 
-    def build(self, channels: Tuple[bool, bool, bool]) -> v2.RandomApply:
-        return v2.RandomApply(
-            [BlurShotNoise(self.sigma, [psnr for keep, psnr in zip(channels, self.psnr) if keep])], self.prob
-        )
+    def build(self) -> v2.RandomApply:
+        # return v2.RandomApply(
+        #     [BlurShotNoise(self.sigma, [psnr for keep, psnr in zip(channels, self.psnr) if keep])], self.prob
+        # )
+        return v2.RandomApply([BlurShotNoise(self.sigma, self.psnr)], self.prob)
 
 
 @dataclasses.dataclass
@@ -155,11 +156,11 @@ class AugmentationConfig:
     patch_size: int = 32
     # channels: Tuple[bool, bool, bool] = (False, True, True)
     interpolation: v2.InterpolationMode = v2.InterpolationMode.BILINEAR
-    elastic: ElasticConfig = ElasticConfig()
-    affine: AffineConfig = AffineConfig()
-    erase: EraseConfig = EraseConfig()
-    blur_shot_noise: BlurShotNoiseConfig = BlurShotNoiseConfig()
-    jitter: ColorJitterConfig = ColorJitterConfig()
+    elastic: ElasticConfig = dataclasses.field(default_factory=ElasticConfig)
+    affine: AffineConfig = dataclasses.field(default_factory=AffineConfig)
+    erase: EraseConfig = dataclasses.field(default_factory=EraseConfig)
+    blur_shot_noise: BlurShotNoiseConfig = dataclasses.field(default_factory=BlurShotNoiseConfig)
+    jitter: ColorJitterConfig = dataclasses.field(default_factory=ColorJitterConfig)
 
     def train_common(self) -> v2.Compose:
         """Build the common augmentations
@@ -194,11 +195,11 @@ class AugmentationConfig:
             [
                 self.elastic.build(self.interpolation),
                 self.affine.build(self.patch_size, self.interpolation),
-                self.blur_shot_noise.build(self.channels),
+                self.blur_shot_noise.build(),
                 self.jitter.build(),
                 self.erase.build(),
                 v2.CenterCrop(self.patch_size),
-                v2.ToDtype(torch.float32),
+                v2.ToDtype(torch.float32, scale=True),
             ]
         )
 
@@ -206,7 +207,7 @@ class AugmentationConfig:
         return v2.Compose(
             [
                 # ChannelSelector([i for i in range(len(self.channels)) if self.channels[i]]),
-                # v2.CenterCrop(self.patch_size),  # In the validation set, the patch are already at the right size
-                v2.ToDtype(torch.float32),
+                v2.CenterCrop(self.patch_size),
+                v2.ToDtype(torch.float32, scale=True),
             ]
         )

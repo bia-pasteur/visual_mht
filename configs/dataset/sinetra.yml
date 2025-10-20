@@ -1,0 +1,8 @@
+__default__: ./trasein.yml
+
+dataset:
+  root: $EXPYRUN_CWD/data/sinetra_patch
+  val_root: $EXPYRUN_CWD/data/sinetra_val_patch
+  blur_shot_noise:  # More noise => more smoothing to keep a similar noise level
+    sigma: [0.5, 1.0]
+    psnr: [5.0]
