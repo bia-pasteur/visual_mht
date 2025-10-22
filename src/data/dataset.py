@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 import torch.utils.data
 
-from . import augmentations
+from . import augmentations, augmentations_old
 
 
 # Has to do some tricks for python < 3.10
@@ -22,6 +22,21 @@ class _DatasetConfig:
     val_root: pathlib.Path
     video_ids: List[str]
     delta_t: int = 0
+
+
+@dataclasses.dataclass
+class DatasetConfigOld(augmentations_old.AugmentationConfig, _DatasetConfig):
+    def build_patch_dataset(self, train=True) -> PatchDataset:
+        return PatchDataset(self.root, self.video_ids, self.train_common() if train else self.test())
+
+    def build_triplet_dataset(self) -> TripletPatchDataset:
+        return TripletPatchDataset(self.build_patch_dataset(train=True), self.train_specific(), self.delta_t)
+
+    def build_siamese_dataset(self) -> SiameseDataset:
+        return SiameseDataset(self.build_patch_dataset(train=True), self.train_specific(), self.delta_t)
+
+    def build_val_dataset(self) -> ValPatchDataset:
+        return ValPatchDataset(self.val_root, self.test())
 
 
 @dataclasses.dataclass

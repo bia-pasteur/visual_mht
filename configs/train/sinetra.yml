@@ -1,0 +1,10 @@
+__default__:
+  - ./trasein.yml
+  - ../dataset/sinetra.yml
+
+
+__run__:
+  __name__: sinetra
+
+training:
+  validation_pairs_overlap: True

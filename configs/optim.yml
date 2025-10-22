@@ -1,0 +1,18 @@
+optimizer:
+  name: AdamW
+  lr: 0.001
+  AdamW:
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+    weight_decay: 0.01
+    amsgrad: False
+  Adam:
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+    weight_decay: 0.0
+    amsgrad: False
+  SGD:
+    momentum: 0.0
+    dampening: 0.0
+    weight_decay: 0.0
+    nesterov: False

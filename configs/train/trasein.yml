@@ -1,0 +1,14 @@
+__new_key_policy__: pass
+
+__default__:
+  - ../dataset/trasein.yml
+  - ../encoder.yml
+  - ../optim.yml
+  - ../train.yml
+
+__run__:
+  __name__: trasein
+  __output_dir__: experiment_folder/training_triplet/
+  __main__: src.experiments.train:main
+
+seed: 666

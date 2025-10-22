@@ -3,41 +3,11 @@
 import dataclasses
 from typing import Sequence, Tuple
 
+import cv2
+from kornia import augmentation, filters
+import numpy as np
 import torch.nn
 from torchvision.transforms import v2  # type: ignore
-
-
-class ChannelSelector(torch.nn.Module):
-    """Select given channels"""
-
-    def __init__(self, channels: Sequence[int]) -> None:
-        super().__init__()
-        self.channels = list(channels)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Select the channels
-
-        Args:
-            x (torch.Tensor): 2d input with channels
-                Shape: (..., C, H, W)
-        """
-        return x[..., self.channels, :, :]
-
-
-class ColorJitter(torch.nn.Module):
-    """Wraps color jitter from torchvision to make it work with 2 channels"""
-
-    def __init__(self, color_jitter: v2.ColorJitter) -> None:
-        super().__init__()
-        self.color_jitter = color_jitter
-
-    def forward(self, x: torch.Tensor):
-        if x.shape[-3] == 2:  # color jitter already supports 1 or 3 channels
-            x = torch.cat((x, torch.zeros((*x.shape[:-3], 1, *x.shape[-2:]), dtype=x.dtype)), dim=-3)
-            x = self.color_jitter(x)
-            return x[..., :2, :, :]
-
-        return self.color_jitter(x)
 
 
 class BlurShotNoise(torch.nn.Module):
@@ -51,13 +21,11 @@ class BlurShotNoise(torch.nn.Module):
 
     """
 
-    def __init__(self, sigma: Tuple[float, float], max_psnr: Sequence[float]) -> None:
+    def __init__(self, sigma: Tuple[float, float], max_psnr: Sequence[float], prob: float) -> None:
         super().__init__()
-        kernel_size = int(4 * max(sigma))
-        if kernel_size % 2 == 0:
-            kernel_size += 1
+        kernel_size = 2 * int(3 * max(sigma)) + 1
 
-        self.blur = v2.GaussianBlur(kernel_size, sigma)
+        self.blur = augmentation.RandomGaussianBlur(kernel_size, sigma, p=prob, separable=False)
         self.max_psnr = torch.tensor(max_psnr)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -65,25 +33,94 @@ class BlurShotNoise(torch.nn.Module):
 
         Args:
             x (torch.Tensor): 2d input with channels
-                Shape: (..., C, H, W)
+                Shape: (C, H, W) or (B, C, H, W)
         """
         n_channel = x.shape[-3]
         assert n_channel == len(self.max_psnr)
 
         blurred: torch.Tensor = self.blur(x)
-        maximum = blurred.transpose(-1, -3).reshape(-1, n_channel).max(dim=0).values
+        maximum = blurred.max(dim=-1).values.max(dim=-1).values[..., None, None]  # Max over images
         maximum[maximum == 0] = 1
 
-        ratio = self.max_psnr**2 / maximum
-        psn = torch.distributions.Poisson(ratio[:, None, None] * blurred).sample((1,))[0] / ratio[:, None, None]
+        selected = self.blur._params["batch_prob"] == 1.0  # pylint: disable=protected-access
+
+        ratio = self.max_psnr[:, None, None].to(maximum.device) ** 2 / maximum
+
+        blurred[selected] = (
+            torch.distributions.Poisson(ratio[selected] * blurred[selected]).sample((1,))[0] / ratio[selected]
+        )
 
         # Renormalize and send to the right dtype
         if torch.is_floating_point(x):
-            psn = psn.clip(0, 1).to(x.dtype)
+            blurred = blurred.clip(0, 1).to(x.dtype)
         else:
-            psn = psn.clip(0, 255).to(x.dtype)
+            blurred = blurred.clip(0, 255).to(x.dtype)
 
-        return psn
+        if x.ndim == 3:
+            return blurred[0]  # Remove the additional batch dimension added by blur
+
+        return blurred
+
+
+class MotionBlur(torch.nn.Module):
+    """Let's do it manually as kornia do not support batch for MotionBlur
+
+    (Kornia reuse the same motion amplitude across the batch...)
+    """
+
+    def __init__(self, max_displacement: int, prob: float):
+        super().__init__()
+        self.max_displacement = max_displacement
+        self.prob = prob
+
+    def generate_kernels(self, n: int, device: torch.device) -> torch.Tensor:
+        kernel_size = self.max_displacement
+        offset = kernel_size // 2  # Middle position
+
+        # Sample a random angle and length
+        angles = np.random.rand(n) * 360
+        half_length = np.random.rand(n) * offset
+        points = np.stack((np.cos(angles) * half_length, np.sin(angles) * half_length), axis=-1)
+
+        kernels = np.zeros((n, kernel_size, kernel_size), dtype=np.uint8)
+
+        # Draw lines on kernels
+        source = (offset - points).round().astype(np.int32)
+        target = (offset + points).round().astype(np.int32)
+        for i in range(n):
+            cv2.line(kernels[i], source[i], target[i], 1)
+
+        kernels_pt = torch.tensor(kernels, device=device)
+        kernels_pt = kernels_pt / kernels_pt.sum(dim=(1, 2), keepdims=True)
+
+        return kernels_pt
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply the motion blur to x.
+
+        It samples the amplitude of motion uniformly
+        """
+        if self.prob == 0.0:
+            return x
+
+        has_batch = True
+        if x.ndim == 3:
+            has_batch = False
+            x = x[None]
+
+        apply = torch.rand(x.shape[0]) < self.prob
+
+        y = x.clone()
+        n = int(apply.sum().item())
+
+        if n != 0:
+            kernels = self.generate_kernels(n, device=x.device)
+            y[apply] = filters.filter2d(x[apply], kernels)
+
+        if not has_batch:
+            y = y[0]
+
+        return y
 
 
 @dataclasses.dataclass
@@ -92,8 +129,19 @@ class ElasticConfig:
     alpha: float = 20.0
     sigma: float = 5.0
 
-    def build(self, interpolation: v2.InterpolationMode = v2.InterpolationMode.BILINEAR) -> v2.RandomApply:
-        return v2.RandomApply([v2.ElasticTransform(self.alpha, self.sigma, interpolation=interpolation)], p=self.prob)
+    def build(
+        self,
+        patch_size: int,
+    ) -> augmentation.RandomElasticTransform:
+        patch_size = 2 * patch_size + 1  # Extracted patches are twice bigger than the patch_size
+        kernel_size = 2 * int(4 * self.sigma) + 1
+        return augmentation.RandomElasticTransform(
+            (kernel_size, kernel_size),
+            (self.sigma, self.sigma),
+            (self.alpha / patch_size, self.alpha / patch_size),
+            p=self.prob,
+            keepdim=True,
+        )
 
 
 @dataclasses.dataclass
@@ -102,20 +150,23 @@ class AffineConfig:
     max_rotate: float = 5.0  # 5°
     max_translate: float = 2.0  # 2 pixels
 
-    def build(
-        self, patch_size: int, interpolation: v2.InterpolationMode = v2.InterpolationMode.BILINEAR
-    ) -> v2.RandomApply:
+    def build(self, patch_size: int) -> augmentation.RandomAffine:
         patch_size = 2 * patch_size + 1  # Extracted patches are twice bigger than the patch_size
-        return v2.RandomApply(
-            [
-                v2.RandomAffine(
-                    self.max_rotate,
-                    (self.max_translate / patch_size, self.max_translate / patch_size),
-                    interpolation=interpolation,
-                )
-            ],
+        return augmentation.RandomAffine(
+            self.max_rotate,
+            (self.max_translate / patch_size, self.max_translate / patch_size),
             p=self.prob,
+            keepdim=True,
         )
+
+
+@dataclasses.dataclass
+class MotionBlurConfig:
+    prob: float = 0.0
+    max_displacement: int = 9  # Max displacement
+
+    def build(self) -> MotionBlur:
+        return MotionBlur(self.max_displacement, self.prob)
 
 
 @dataclasses.dataclass
@@ -123,8 +174,8 @@ class EraseConfig:
     prob: float = 0.0
     scale: Tuple[float, float] = (0.005, 0.05)
 
-    def build(self) -> v2.RandomErasing:
-        return v2.RandomErasing(self.prob, self.scale, inplace=True)
+    def build(self) -> augmentation.RandomErasing:
+        return augmentation.RandomErasing(self.scale, p=self.prob, keepdim=True)
 
 
 @dataclasses.dataclass
@@ -133,55 +184,63 @@ class BlurShotNoiseConfig:
     sigma: Tuple[float, float] = (0.5, 1.0)
     psnr: Tuple[float] = (20.0,)
 
-    def build(self) -> v2.RandomApply:
-        # return v2.RandomApply(
-        #     [BlurShotNoise(self.sigma, [psnr for keep, psnr in zip(channels, self.psnr) if keep])], self.prob
-        # )
-        return v2.RandomApply([BlurShotNoise(self.sigma, self.psnr)], self.prob)
+    def build(self) -> BlurShotNoise:
+        return BlurShotNoise(self.sigma, self.psnr, self.prob)
 
 
 @dataclasses.dataclass
 class ColorJitterConfig:
     prob: float = 0.0
-    brightness: Tuple[float, float] = (0.8, 1.25)
-    contrast: Tuple[float, float] = (0.8, 1.25)
-    saturation: Tuple[float, float] = (0.8, 1.25)
+    brightness: float = 0.05  # Seems to give similar augmentation that the previous torchvision [0.85, 1.20]
+    contrast: float = 0.05
 
-    def build(self) -> v2.RandomApply:
-        return v2.RandomApply([ColorJitter(v2.ColorJitter(self.brightness, self.contrast, self.saturation))], self.prob)
+    def build(self) -> augmentation.ColorJiggle:
+        return augmentation.ColorJiggle(self.brightness, self.contrast, p=self.prob, keepdim=True)
+
+
+class ConvertFloat32(torch.nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if torch.is_floating_point(x):
+            return x.to(torch.float32)
+
+        return x / 255
 
 
 @dataclasses.dataclass
 class AugmentationConfig:
     patch_size: int = 32
-    # channels: Tuple[bool, bool, bool] = (False, True, True)
-    interpolation: v2.InterpolationMode = v2.InterpolationMode.BILINEAR
     elastic: ElasticConfig = dataclasses.field(default_factory=ElasticConfig)
     affine: AffineConfig = dataclasses.field(default_factory=AffineConfig)
     erase: EraseConfig = dataclasses.field(default_factory=EraseConfig)
+    motion_blur: MotionBlurConfig = dataclasses.field(default_factory=MotionBlurConfig)
     blur_shot_noise: BlurShotNoiseConfig = dataclasses.field(default_factory=BlurShotNoiseConfig)
     jitter: ColorJitterConfig = dataclasses.field(default_factory=ColorJitterConfig)
 
-    def train_common(self) -> v2.Compose:
+    def train_common(self) -> augmentation.ImageSequential:
         """Build the common augmentations
 
         It will allow any axial/central symmetry
         """
-        return v2.Compose(
+        return v2.Compose(  # torchvision is quite faster if not batch processed
             [
-                # ChannelSelector([i for i in range(len(self.channels)) if self.channels[i]]),
                 v2.RandomHorizontalFlip(),
-                v2.RandomRotation(180, interpolation=self.interpolation),
+                v2.RandomRotation(180),
             ]
         )
+        # return augmentation.ImageSequential(
+        #     ConvertFloat32(),
+        #     augmentation.RandomHorizontalFlip(same_on_batch=True, keepdim=True),
+        #     augmentation.RandomRotation(180.0, same_on_batch=True, keepdim=True),
+        # )
 
-    def train_specific(self) -> v2.Compose:
+    def train_specific(self) -> augmentation.ImageSequential:
         """Build the specific annotations
 
         It will apply in order any of the following optionnal augmentations:
 
         - elastic: Spatial elastic random deformation of the image
         - affine: Affine random deformation of the image (rotation and translation only)
+        - motion_blur: Random motion blurring
         - blur_shot_noise: Random blurring followed by Poisson Shot Noise
         - jitter: Random color jittering
         - erase: Random erasing of a rectangle area. It is applied after all the deformations
@@ -191,23 +250,19 @@ class AugmentationConfig:
         - croping: Center croping to remove the augmentations artefacts on the border
 
         """
-        return v2.Compose(
-            [
-                self.elastic.build(self.interpolation),
-                self.affine.build(self.patch_size, self.interpolation),
-                self.blur_shot_noise.build(),
-                self.jitter.build(),
-                self.erase.build(),
-                v2.CenterCrop(self.patch_size),
-                v2.ToDtype(torch.float32, scale=True),
-            ]
+        return augmentation.ImageSequential(
+            ConvertFloat32(),
+            self.elastic.build(self.patch_size),
+            self.affine.build(self.patch_size),
+            self.motion_blur.build(),
+            self.blur_shot_noise.build(),
+            self.jitter.build(),
+            self.erase.build(),
+            augmentation.CenterCrop(self.patch_size, keepdim=True),
         )
 
-    def test(self) -> v2.Compose:
-        return v2.Compose(
-            [
-                # ChannelSelector([i for i in range(len(self.channels)) if self.channels[i]]),
-                v2.CenterCrop(self.patch_size),
-                v2.ToDtype(torch.float32, scale=True),
-            ]
+    def test(self) -> augmentation.ImageSequential:
+        return augmentation.ImageSequential(
+            ConvertFloat32(),
+            augmentation.CenterCrop(self.patch_size, keepdim=True),
         )

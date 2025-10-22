@@ -1,10 +1,8 @@
-__default__: ./trasein.yml
+__default__: ./trasein_old.yml
 
 dataset:
   root: $EXPYRUN_CWD/data/sinetra_patch
   val_root: $EXPYRUN_CWD/data/sinetra_val_patch
-  motion_blur:  # Not modeled in SINETRA
-    prob: 0.0
   blur_shot_noise:  # More noise => more smoothing to keep a similar noise level
     sigma: [0.5, 1.0]
     psnr: [5.0]

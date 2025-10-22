@@ -4,8 +4,9 @@ dataset:
   video_ids: []  # Take all
   temporal_max_offset: 4
   patch_size: 32
+  interpolation: bilinear
   elastic:
-    prob: 0.5
+    prob: 0.25  # It is very slow (We could optimize it ?), so let's not use it too much
     alpha: 20.0
     sigma: 5.0
   affine:
@@ -15,14 +16,12 @@ dataset:
   erase:
     prob: 1.0  # As cropping is used afterward, only 25% of images are truly impacted
     scale: [0.005, 0.05]
-  motion_blur:
-    prob: 0.1  # Rarely adds motion blur
-    max_displacement: 9
   blur_shot_noise:
     prob: 0.5
     sigma: [0.1, 1.0]
     psnr: [20.0]
   jitter:
     prob: 0.5
-    brightness: 0.05
-    contrast: 0.05
+    brightness: [0.8, 1.25]
+    contrast: [0.8, 1.25]
+    saturation: [0.8, 1.25]
