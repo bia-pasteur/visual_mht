@@ -1,0 +1,55 @@
+visual_mht:
+  association_threshold: -1.0
+  detection_std: 1.0
+  process_std: 2.0
+  kalman_order: 1
+  fpr: 0.1
+  fnr: 0.1
+  birth_rate: 0.0001
+  death_rate: 0.0001
+  tree_depth: 4
+  step: 1
+  n_det: -1.0
+  volume: -1.0
+  n_0: -1.0
+  solver: scipy
+  track_building: detection
+  drop_trailing: False
+  false_tracks: True
+  cost: model
+  std: 2.5
+  model_cutoff: 10.0
+  initial_std_factor: 3.0
+  features_cutoff: 3.0
+  features_std: 0.4
+  features_ema: 0.5
+
+
+
+# bskt:
+#   association_threshold: -1.0
+#   detection_std: 1.0
+#   process_std: 1.0
+#   kalman_order: 0
+#   fpr: 0.1
+#   fnr: 0.1
+#   birth_rate: 0.0001
+#   death_rate: 0.0001
+#   tree_depth: 4
+#   n_det: -1.0
+#   volume: -1.0
+#   n_0: -1.0
+#   solver: scipy
+#   track_building: detection
+#   drop_trailing: False
+#   cost: euclidean
+#   std: 1.0
+#   initial_std_factor: 10.0
+#   optical_flow:
+#     name: Farneback
+#     downscale: 4
+#     farneback:
+#       win_size: 20
+#     tvl1:
+#       attachment: 3.0
+#       num_warp: 2

@@ -1,0 +1,7 @@
+__default__:
+  - ./trackmate.yml
+  - ./emht.yml
+  - ./koft.yml
+  - ./bskt.yml
+  - ./visual_mht.yml
+  - ./visual_nn.yml

@@ -1,0 +1,12 @@
+emht:
+  icy_path: $ICY
+  motion: MULTI
+  gate_factor: 4.0
+  detection_fpr: 0.1
+  detection_fnr: 0.1
+  expected_track_length: -1  # Defaults to T
+  expected_initial_particles: -1  # Default to M_1
+  expected_new_particles: 1
+  existence_prob: 0.5  # Seems to be useless
+  termination_prob: 1.e-4  # Ad hoc cost for termination
+  tree_depth: 2  # <=> 4 or 3 (offset of 2 (or 1), it is unclear)

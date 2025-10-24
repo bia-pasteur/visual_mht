@@ -91,7 +91,7 @@ class MotionBlur(torch.nn.Module):
             cv2.line(kernels[i], source[i], target[i], 1)
 
         kernels_pt = torch.tensor(kernels, device=device)
-        kernels_pt = kernels_pt / kernels_pt.sum(dim=(1, 2), keepdims=True)
+        kernels_pt = kernels_pt / kernels_pt.sum(dim=(1, 2), keepdims=True)  # type: ignore
 
         return kernels_pt
 

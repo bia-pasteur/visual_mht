@@ -1,0 +1,20 @@
+__new_key_policy__: pass
+
+__default__:
+  - ../video/sinetra.yml
+  - ../detect.yml
+  - ../tracking_methods/all.yml
+  - ../optical_flow.yml
+  - ../extractor/sinetra.yml
+
+__run__:
+  __main__: src.experiments.track:main_sinetra
+  __name__: "{video.scenario}/0.2-50.0/{video.seed}"
+  __output_dir__: experiment_folder/tracking/sinetra  # True output_dir is output_dir/__name__
+
+
+tracking_methods:
+  - trackmate
+  - emht
+  - koft
+  - visual_mht

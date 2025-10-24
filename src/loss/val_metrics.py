@@ -309,7 +309,7 @@ class LinkAP(Metric):
 
     def aggregate(self) -> float:
         if not self.links.links:
-            return 0.0
+            return float("nan")
 
         return compute_ap(self.links.recall, self.links.precision)
 
@@ -327,7 +327,7 @@ class LinkBestF1(Metric):
 
     def aggregate(self) -> float:
         if not self.links.links:
-            return 0.0
+            return float("nan")
 
         return max(self.links.f1)
 
@@ -345,7 +345,7 @@ class LinkBestF1Recall(Metric):
 
     def aggregate(self) -> float:
         if not self.links.links:
-            return 0.0
+            return float("nan")
 
         return self.links.recall[np.argmax(self.links.f1)]
 
@@ -363,7 +363,7 @@ class LinkBestF1Precision(Metric):
 
     def aggregate(self) -> float:
         if not self.links.links:
-            return 0.0
+            return float("nan")
 
         return self.links.precision[np.argmax(self.links.f1)]
 

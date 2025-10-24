@@ -1,0 +1,8 @@
+visual_nn:
+  association_threshold: 10.0
+  n_valid: 3
+  n_gap: 5
+  alpha: 0.8
+  features_ema: 0.0
+  position_gate: 20.0
+  features_gate: 3.0
