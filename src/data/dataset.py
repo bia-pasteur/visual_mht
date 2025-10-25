@@ -241,6 +241,7 @@ class ValPatchDataset(torch.utils.data.Dataset):
         self,
         root: Union[str, os.PathLike],
         transforms: Optional[Callable[[Any], Any]] = None,
+        fpt=False,
     ) -> None:
         super().__init__()
         self.root = pathlib.Path(root)
@@ -268,7 +269,7 @@ class ValPatchDataset(torch.utils.data.Dataset):
 
                 self.annotated.append(int((pair_path / "annotated.txt").read_text()))
 
-                for frame_path in sorted_alphanumeric(pair_path.glob("patches_*.pt")):
+                for frame_path in sorted_alphanumeric(pair_path.glob(f"{'fpt' if fpt else 'patches'}_*.pt")):
                     frame_id = int(frame_path.stem.split("_")[-1])
                     patches = torch.load(frame_path)
 

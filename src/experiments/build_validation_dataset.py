@@ -18,6 +18,7 @@ from ..data.video import VideoConfig
 from ..data import sinetra_data
 from ..data import trasein_annotations
 from ..detect import DetectionConfig
+from ..linkers import features
 from .build_dataset import extract_at_frame_id
 
 
@@ -97,6 +98,18 @@ def main_sinetra(name: str, cfg_data: Dict):
             )
             torch.save(patches[:, 0], root / f"{i}" / f"patches_{frame_id}.pt")
 
+            # Extract FPT for baseline comparison
+            fpt = features._fpt_moments(  # pylint: disable=protected-access
+                sinetra_data.load_gt_segmentation(cfg.video.path.parent, frame_id),
+                video[frame_id].sum(axis=-1),
+                gt_positions[frame_id].numpy(),
+            )
+
+            torch.save(
+                torch.cat((gt_positions[frame_id], torch.tensor(fpt, dtype=torch.float32)), dim=-1),
+                root / f"{i}" / f"fpt_{frame_id}.pt",
+            )
+
         # Store the number of dets in patches that we know should match
         (root / f"{i}" / "annotated.txt").write_text(f"{gt_positions.shape[1]}")
 
@@ -150,6 +163,18 @@ def main_trasein(name: str, cfg_data: Dict):
                 frame_id, torch.from_numpy(video[frame_id])[None], detections.position[:, None], cfg.patch_size
             )
             torch.save(patches[:, 0], root / f"{i}" / f"patches_{frame_id}.pt")
+
+            # Extract FPT for baseline comparison
+            fpt = features._fpt_moments(  # pylint: disable=protected-access
+                detections.segmentation.numpy(),
+                video[frame_id].sum(axis=-1),
+                detections.position.numpy(),
+            )
+
+            torch.save(
+                torch.cat((detections.position, torch.tensor(fpt, dtype=torch.float32)), dim=-1),
+                root / f"{i}" / f"fpt_{frame_id}.pt",
+            )
 
         # Store the number of dets in patches that we know should match
         (root / f"{i}" / "annotated.txt").write_text(f"{num_det}")

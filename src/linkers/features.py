@@ -4,6 +4,7 @@ import dataclasses
 import pathlib
 from typing import Optional
 
+import numba
 import numpy as np
 import scipy.ndimage  # type: ignore
 import torch
@@ -216,3 +217,50 @@ class DeepFeatures3D(byotrack.FeaturesExtractor):
                 )
                 # .cpu()
             )
+
+
+@numba.njit(cache=byotrack.NUMBA_CACHE)
+def _fpt_moments(segmentation: np.ndarray, intensity: np.ndarray, positions: np.ndarray) -> np.ndarray:
+    """Extract the cumulated intensity of each detection and their normalized second order moment
+
+    Corresponds to m0 and m2 in Features Point Tracking.
+
+    Args:
+        segmentation (np.ndarray): Segmentation of targets
+            Shape: ([D, ]H, W), dtype: int
+        intensity (np.ndarray): Video frame
+            Shape: ([D, ]H, W), dtype: float
+        positions (np.ndarray): Precomputed position of each instance
+            Shape: (n, dim), dtype: float
+
+    Returns:
+        np.ndarray: Intensity and second order moment for each target
+            Shape: (n, 2), dtype: float
+
+    """
+    n = segmentation.max()
+
+    moments = np.zeros((n, 2), dtype=intensity.dtype)
+
+    for index in np.ndindex(*segmentation.shape):
+        instance = segmentation[index] - 1
+        if instance != -1:
+            moments[instance, 0] += intensity[index]
+            offset = np.array(index) - positions[instance]
+            offset **= 2
+            moments[instance, 1] = offset.sum() * intensity[index]
+
+    moments[:, 1] /= moments[:, 0] + (moments[:, 0] == 0)
+    return moments
+
+
+class FPT(byotrack.FeaturesExtractor):
+    """Feature Point Tracking features
+
+    Extract the 0-order and 2-order intensity moments
+    """
+
+    def __call__(self, frame, detections):
+        moments = _fpt_moments(detections.segmentation.numpy(), frame.sum(axis=-1), detections.position.numpy())
+
+        return torch.tensor(moments, dtype=torch.float32)

@@ -3,6 +3,8 @@
 import pathlib
 from typing import List, Dict
 
+import numpy as np
+import tifffile
 import torch
 
 import byotrack
@@ -30,3 +32,7 @@ def load_tracks(simulation_path: pathlib.Path) -> List[byotrack.Track]:
         tracks.append(byotrack.Track(0, ground_truth["mu"][:, i], i))
 
     return tracks
+
+
+def load_gt_segmentation(simulation_path: pathlib.Path, frame_id: int) -> np.ndarray:
+    return tifffile.imread(simulation_path / "tracks" / f"{frame_id:04}.tiff")
