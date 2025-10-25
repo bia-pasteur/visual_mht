@@ -53,7 +53,16 @@ def main_sinetra(name: str, cfg_data: dict) -> None:
         ),
     )
 
+    # Seed
     enforce_all_seeds(cfg.video.seed)
+
+    # Device
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        print("GPU is", torch.cuda.get_device_name(device))
+    else:
+        device = torch.device("cpu")
+        print("Only CPU available")
 
     # Load data
     video = cfg.video.open()
@@ -68,7 +77,6 @@ def main_sinetra(name: str, cfg_data: dict) -> None:
 
     # Prepare features and optical flow
     optflow = cfg.optflow.build()
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     extractor = cfg.model.build_extractor(device)
 
     # Evaluate detections step performances
