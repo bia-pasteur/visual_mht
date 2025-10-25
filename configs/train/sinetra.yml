@@ -4,7 +4,7 @@ __default__:
 
 
 __run__:
-  __name__: sinetra
+  __name__: sinetra/{model.backbone}
 
 training:
   validation_pairs_overlap: True

@@ -7,7 +7,7 @@ __default__:
   - ../train.yml
 
 __run__:
-  __name__: trasein
+  __name__: trasein/{model.backbone}
   __output_dir__: experiment_folder/training_triplet/
   __main__: src.experiments.train:main
 
