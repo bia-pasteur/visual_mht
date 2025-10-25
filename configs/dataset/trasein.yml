@@ -2,7 +2,7 @@ dataset:
   root: $EXPYRUN_CWD/data/trasein_patch
   val_root: $EXPYRUN_CWD/data/trasein_val_patch
   video_ids: []  # Take all
-  temporal_max_offset: 4
+  delta_t: 4
   patch_size: 32
   elastic:
     prob: 0.5
