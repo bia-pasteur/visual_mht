@@ -1,4 +1,4 @@
 __default__: ./trasein.yml
 
 model:
-  weights: experiment_folder/training_triplet/sinetra/exp.0/experiments/checkpoints/best.ckpt
+  weights: $EXPYRUN_CWD/experiment_folder/training_triplet/sinetra/exp.3/experiments/checkpoints/best.ckpt

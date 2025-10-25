@@ -3,6 +3,6 @@ __new_key_policy__: pass
 __default__: ../encoder.yml
 
 model:
-  weights: experiment_folder/training_triplet/trasein/exp.0/experiments/checkpoints/best.ckpt
+  weights: $EXPYRUN_CWD/experiment_folder/training_triplet/trasein/exp.0/experiments/checkpoints/best.ckpt
   patch_size: 32
   extractor: deep
