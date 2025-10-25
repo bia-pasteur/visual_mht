@@ -1,16 +1,23 @@
 black
 byotrack
 dacite
+deep-trainer
 expyrun
-ipywidgets
 gurobipy
+ipywidgets
+kornia
 matplotlib
 mypy
 notebook
+opencv-python
+pylapy[lap]
 pylint
 scikit-image
 scipy
 sinetra
+torch
+torchvision
 torch-kf
+torch-resnet
 # trackeval => Has to dl the github
 types-tqdm
