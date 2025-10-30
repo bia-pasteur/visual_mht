@@ -1,4 +1,5 @@
 __default__: ./trasein.yml
 
 model:
-  weights: $EXPYRUN_CWD/experiment_folder/training_triplet/sinetra/exp.3/experiments/checkpoints/best.ckpt
+  backbone: PreActResNet32
+  weights: models/sinetra/model.ckpt

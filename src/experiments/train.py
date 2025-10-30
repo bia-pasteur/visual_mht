@@ -2,7 +2,9 @@
 
 import dataclasses
 import enum
+import os
 import pathlib
+import shutil
 from typing import cast, Dict, Optional, Tuple
 
 import dacite
@@ -212,3 +214,24 @@ def main(name: str, cfg_data: dict) -> None:
 
     with open("results.yml", "w", encoding="utf-8") as f:
         f.write(result_string)
+
+    # Overwrite the saved model in models/{data} which will be used for tracking
+    export_model(name.split("/")[0])
+
+
+def export_model(name: str):
+    """Simply copy config.yml, results.yml and the ckpt in the models/ folder"""
+    folder = pathlib.Path(os.environ.get("EXPYRUN_CWD", ".")) / "models" / f"{name}"
+
+    if (folder / "config.yml").exists():
+        (folder / "config.yml").unlink()
+    if (folder / "results.yml").exists():
+        (folder / "results.yml").unlink()
+    if (folder / "model.ckpt").exists():
+        (folder / "model.ckpt").unlink()
+
+    shutil.copy("config.yml", folder / "config.yml")
+    shutil.copy("results.yml", folder / "results.yml")
+
+    # Copy the last model (We don't use validation in the ISBI paper)
+    shutil.copy("experiments/checkpoints/300.ckpt", folder / "model.ckpt")

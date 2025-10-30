@@ -1,6 +1,6 @@
 training:
   batch_size: 500
-  epochs: 100
+  epochs: 300
   epoch_size: 100
   method: triplet
   triplet_margin: 1.0
