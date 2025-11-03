@@ -2,4 +2,4 @@ __default__: ./trasein.yml
 
 model:
   backbone: PreActResNet32
-  weights: models/sinetra/model.ckpt
+  weights: $EXPYRUN_CWD/models/sinetra/model.ckpt

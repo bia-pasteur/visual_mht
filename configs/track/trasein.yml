@@ -1,0 +1,15 @@
+__default__:
+  - ./sinetra.yml
+  - ../video/trasein.yml
+  - ../extractor/trasein.yml
+
+__run__:
+  __main__: src.experiments.track_trasein:main
+  __name__: "{video.video_id}"
+  __output_dir__: experiment_folder/tracking/trasein  # True output_dir is output_dir/__name__
+
+
+tracking_methods:
+  # - emht
+  - koft
+  - visual_mht

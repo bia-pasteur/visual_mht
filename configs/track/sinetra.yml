@@ -8,7 +8,7 @@ __default__:
   - ../extractor/sinetra.yml
 
 __run__:
-  __main__: src.experiments.track:main_sinetra
+  __main__: src.experiments.track_sinetra:main
   __name__: "{video.scenario}/0.2-50.0/{video.seed}"
   __output_dir__: experiment_folder/tracking/sinetra  # True output_dir is output_dir/__name__
 

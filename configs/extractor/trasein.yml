@@ -3,6 +3,6 @@ __new_key_policy__: pass
 __default__: ../encoder.yml
 
 model:
-  weights: models/trasein/model.ckpt
+  weights: $EXPYRUN_CWD/models/trasein/model.ckpt
   patch_size: 32
   extractor: deep

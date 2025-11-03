@@ -42,7 +42,7 @@ class ExperimentConfig:
     visual_nn: VisualNNConfig
 
 
-def main_sinetra(name: str, cfg_data: dict) -> None:
+def main(name: str, cfg_data: dict) -> None:
     print("Running:", name)
     print(yaml.dump(cfg_data))
     cfg = dacite.from_dict(
@@ -135,6 +135,3 @@ def main_sinetra(name: str, cfg_data: dict) -> None:
 
     with open("metrics.yml", "w", encoding="utf-8") as file:
         file.write(yaml.dump(metrics))
-
-
-# trasein is run and inspected manually

@@ -137,3 +137,6 @@ data/
 # Experiment folder
 experiment_folder/
 
+# Models
+models/
+stardist/
