@@ -8,6 +8,7 @@ ipywidgets
 kornia
 matplotlib
 mypy
+numpy<2.0
 notebook
 opencv-python
 pylapy[lap]
@@ -15,6 +16,8 @@ pylint
 scikit-image
 scipy
 sinetra
+stardist
+tensorflow[and-cuda]
 torch
 torchvision
 torch-kf
