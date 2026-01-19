@@ -1,6 +1,6 @@
 # Integrating Visual Features in Multiple Hypothesis Tracking (VisualMHT)
 
-Code and experiments for the paper: "Integrating Visual Features in Multiple Hypothesis Tracking Through Self-Supervised Learning", submitted at IEEE ISBI2026.
+Code and experiments for the paper: "Integrating Visual Features in Multiple Hypothesis Tracking Through Self-Supervised Learning", accepted at IEEE ISBI2026.
 
 Abstract: *Multiple Object Tracking (MOT) is a crucial step in the automatic analysis of biological processes.
 In this work, we introduce VisualMHT, a Bayesian Multiple Hypothesis Tracking algorithm integrating self-supervised visual features to leverage robust target identity and consistently track biological objects. This novel tracking algorithm achieves state-of-the-art results on the SINETRA synthetic datasets and demonstrates robust neuron tracking in the freshwater cnidarian Hydra vulgaris, highlighting the benefit of combining probabilistic motion models with learned visual representations.*
@@ -12,7 +12,7 @@ In this work, we introduce VisualMHT, a Bayesian Multiple Hypothesis Tracking al
 First clone the repository and submodules
 
 ```bash
-$ git clone git@github.com:raphaelreme/visual_mht.git
+$ git clone git@github.com:bia-pasteur/visual_mht.git
 $ cd visual_mht
 $ git submodule init
 $ git submodule update
