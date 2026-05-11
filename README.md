@@ -63,11 +63,6 @@ $ bash scripts/train.sh  # Produce a model.ckpt in models/trasein and models/sin
 
 ### Run VisualMHT
 
-> [!WARNING]
-> Our MHT code is still not included in the source as we are waiting for a "déclaration d'invention". It will be added soon.
-> Please contact us, if you need the source code to run the following experiments.
-
-
 Finally, you can run the tracking experiments on SINETRA:
 ```bash
 # We use 5 random seeds: 111, 222, 333, 444 and 555
